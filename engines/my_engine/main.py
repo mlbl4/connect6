@@ -6,7 +6,7 @@ Connect6 engine - API (entry point).
 The GUI starts this program as a separate process and talks to it through
 text lines: it writes commands to our stdin and reads our answers from stdout.
 This file only handles that conversation and the letters <-> numbers
-translation; the board lives in board.py and the thinking in search.py.
+translation; the board lives in my_engine/board.py and the thinking in my_engine/search.py.
 Anything that is not an answer for the GUI must go to stderr (see debug()).
 """
 
@@ -18,9 +18,9 @@ from search import best_move
 ENGINE_NAME = "MariaEngine"
 
 
-# ---------------------------------------------------------------------------
+############################################
 # Input / output helpers
-# ---------------------------------------------------------------------------
+############################################
 
 def send(msg):
     """Send one line to the GUI. flush=True is essential: without it the text
@@ -33,9 +33,9 @@ def debug(msg):
     print(msg, file=sys.stderr, flush=True)
 
 
-# ---------------------------------------------------------------------------
+# ###########################################
 # Coordinate conversion: letters <-> (x, y)
-# ---------------------------------------------------------------------------
+# ###########################################
 
 def parse_stones(text):
     """Convert 'JJKK' -> [(9, 9), (10, 10)] (incoming, from the GUI).
@@ -60,11 +60,13 @@ def stones_to_text(stones):
     return "".join(chr(ord('A') + x) + chr(ord('A') + y) for x, y in stones)
 
 
-# ---------------------------------------------------------------------------
+############################################
 # Engine controller: receives commands, delegates the work, answers
-# ---------------------------------------------------------------------------
+"""API layer: reads the GUI's commands, updates the board,
+    asks the search for moves and sends the answers."""
+############################################
 
-class Engine:
+class API:
     def __init__(self):
         self.board = Board()
         self.time_limit = None   # set by the 'depth' command
@@ -147,4 +149,4 @@ class Engine:
 
 
 if __name__ == "__main__":
-    Engine().run()
+    API().run()
