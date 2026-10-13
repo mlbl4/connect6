@@ -83,9 +83,9 @@ def best_move(board, color):
     best_value = float("-inf") if maximising else float("inf")
     chosen = moves[0]
     for move in moves:
-        board.place(color, move)
+        board.place(color, move) # we place it in the board
         value = minimax(board, DEPTH - 1, move)
-        board.undo(move)
+        board.undo(move) # we take it back
         if (maximising and value > best_value) or \
            (not maximising and value < best_value):
             best_value, chosen = value, move
