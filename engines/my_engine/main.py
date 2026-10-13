@@ -15,7 +15,7 @@ import sys
 from board import Board, EDGE, EMPTY, BLACK, WHITE
 from search import best_move
 
-ENGINE_NAME = "MariaEngine"
+ENGINE_NAME = "mlb"
 
 
 ############################################

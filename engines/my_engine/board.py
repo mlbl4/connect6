@@ -47,6 +47,18 @@ class Board:
             self.grid[y][x] = color
             self.stones_played += 1
         self.to_move = opponent(color)
+
+    def undo(self, stones):
+        """Take back the stones of the last move (the opposite of place()).
+        The search uses it to try a move, look ahead, and then restore the
+        board exactly as it was, without copying the whole board.
+        The player who had placed those stones is the one to move again."""
+        x, y = stones[0]
+        color = self.grid[y][x]
+        for x, y in stones:
+            self.grid[y][x] = EMPTY
+            self.stones_played -= 1
+        self.to_move = color
  
     def empty_cells(self):
         """List of (x, y) positions with no stone."""
