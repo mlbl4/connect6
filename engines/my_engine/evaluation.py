@@ -1,5 +1,5 @@
 """
-Static evaluation of a Connect6 position.
+Static evaluation of a Connect6 position (naive version, session 1).
 
 Gives ONE number for ONE board, without looking ahead:
   - positive  -> the position looks better for Black
@@ -79,4 +79,56 @@ def evaluate(board, last_stones=None):
             return 0
 
     black, white = living_lines(board)
+    return black - white
+
+
+# ===========================================================================
+# Weighted evaluation (version 2, session 2)
+# ===========================================================================
+#
+# The naive evaluation counts every living line as 1, so a window with one
+# stone is worth as much as a window with five, one move away from winning.
+# Here each living line is weighted by the number of stones it already holds,
+# and the weight grows geometrically: every extra stone in a window brings it
+# one step closer to six, so it is worth several times more.
+#
+# WEIGHTS[k] is the value of a living line with k stones of one colour.
+# The largest possible total (924 windows x 625) stays below WIN_SCORE, so a
+# real win is always worth more than any estimate.
+WEIGHTS = [0, 1, 5, 25, 125, 625]
+
+
+def weighted_lines(board):
+    """Sum of WEIGHTS[k] over the living lines of each colour.
+    Returns (black_total, white_total)."""
+    black = white = 0
+    grid = board.grid
+    for window in WINDOWS:
+        b = w = 0
+        for x, y in window:
+            cell = grid[y][x]
+            if cell == BLACK:
+                b += 1
+            elif cell == WHITE:
+                w += 1
+        if b and not w:
+            black += WEIGHTS[b]
+        elif w and not b:
+            white += WEIGHTS[w]
+    return black, white
+
+
+def evaluate_weighted(board, last_stones=None):
+    """Same structure as evaluate(): exact result if the game is over,
+    otherwise Black's weighted living lines minus White's."""
+    if last_stones:
+        result = board.check_winner(last_stones)
+        if result == BLACK:
+            return WIN_SCORE
+        if result == WHITE:
+            return -WIN_SCORE
+        if result == DRAW:
+            return 0
+
+    black, white = weighted_lines(board)
     return black - white
