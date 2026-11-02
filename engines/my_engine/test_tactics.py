@@ -19,6 +19,7 @@ import time
 import search
 from board import Board, BLACK, WHITE
 from moves import candidate_moves
+search.TIME_LIMIT = None   # fixed depth: exact node counts for the report
 
 
 def show(name, ok, detail):

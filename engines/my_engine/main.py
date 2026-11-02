@@ -13,7 +13,7 @@ Anything that is not an answer for the GUI must go to stderr (see debug()).
 import sys
 
 from board import Board, EDGE, EMPTY, BLACK, WHITE
-from search import best_move
+from search import best_move, random_move
 
 ENGINE_NAME = "mlb"
 
@@ -71,10 +71,27 @@ class API:
         self.board = Board()
         self.time_limit = None   # set by the 'depth' command
 
+    def is_legal(self, stones):
+        """True if `stones` is a legal move on our board: the right number of
+        stones (1 for black's opening, 2 otherwise), all different, inside
+        the board and on empty cells."""
+        needed = min(self.board.stones_this_turn(), len(self.board.empty_cells()))
+        return (len(stones) == needed
+                and len(set(stones)) == len(stones)
+                and all(0 <= x < EDGE and 0 <= y < EDGE
+                        and self.board.grid[y][x] == EMPTY
+                        for x, y in stones))
+
     def play_and_answer(self):
-        """Ask the search for a move, apply it to our board and send it."""
+        """Ask the search for a move, apply it to our board and send it.
+        The move is checked before sending it: an illegal move (two stones on
+        the same cell, or on an occupied cell) disqualifies the engine, so
+        if the search ever returned one, a random legal move is sent instead."""
         color = self.board.to_move
         stones = best_move(self.board, color)
+        if not self.is_legal(stones):
+            debug("Illegal move from the search: " + str(stones))
+            stones = random_move(self.board, color)
         self.board.place(color, stones)
         send("move " + stones_to_text(stones))
 
