@@ -13,6 +13,8 @@ VERSIONS = {
                ALGORITHM="minimax", DEPTH=2),
     "v2": dict(GENERATOR=moves.threat_moves, EVALUATE=evaluation.evaluate_weighted,
                ALGORITHM="alphabeta", DEPTH=3),
+    "v3": dict(GENERATOR=moves.staged_moves, EVALUATE=evaluation.evaluate_threats,
+               ALGORITHM="alphabeta", DEPTH=3),
 }
 
 def use(version):
@@ -36,7 +38,7 @@ def play(black, white, max_turns=120):
     return None, max_turns, slowest
 
 if __name__ == "__main__":
-    for black, white in (("v2", "v1"), ("v1", "v2")):
+    for black, white in (("v3", "v2"), ("v2", "v3")):
         result, turns, slowest = play(black, white)
         winner = {BLACK: f"Black ({black})", WHITE: f"White ({white})",
                   DRAW: "nobody (draw)", None: "nobody (move limit)"}[result]

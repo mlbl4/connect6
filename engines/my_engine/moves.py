@@ -149,3 +149,134 @@ def threat_moves(board, max_cells=MAX_CELLS):
         return [[cell] for cell in cells]
 
     return [list(pair) for pair in combinations(cells, 2)]
+
+
+# ===========================================================================
+# Move generation by stages: imminent threats first (version 3, session 3)
+# ===========================================================================
+#
+# Before ranking cells, the generator checks the two situations that decide
+# the game on the spot, as the guide of session 3 asks:
+#   1. WIN:    the player to move has a window with 4 or 5 of his stones and
+#              none of the opponent's -> complete it and win. Only that move
+#              is returned, so the search plays it without exploring anything.
+#   2. DEFEND: the opponent has such windows (threats, as defined by Wu and
+#              Huang) -> he wins next turn unless every one of them is
+#              blocked. Only the pairs of cells that block all of them are
+#              returned. If no pair can (three or more independent threats),
+#              the game is lost and the normal moves are returned.
+#   3. Otherwise, the threat-based pairs of version 2, but ordered so that the
+#      pairs that create new threats (windows with 4 or more stones) come
+#      first, then by the threat score of their cells.
+
+def _scan(board, player):
+    """One pass over the 924 windows. Returns:
+      mine:   windows where `player` has 4 or 5 stones and the opponent none
+              (he can complete six this turn), as lists of their empty cells;
+      theirs: the same for the opponent (his threats);
+      makers: empty cells that are in a window with exactly 3 stones of
+              `player` and none of the opponent's: one stone there turns
+              the window into a threat."""
+    grid = board.grid
+    other = opponent(player)
+    mine, theirs, makers = [], [], set()
+    for window in WINDOWS:
+        p = o = 0
+        empty = []
+        for x, y in window:
+            cell = grid[y][x]
+            if cell == player:
+                p += 1
+            elif cell == other:
+                o += 1
+            else:
+                empty.append((x, y))
+        if o == 0 and p >= 4:
+            mine.append(empty)
+        elif p == 0 and o >= 4:
+            theirs.append(empty)
+        elif o == 0 and p == 3:
+            makers.update(empty)
+    return mine, theirs, makers
+
+
+MAX_MAKERS = 6   # extra threat-making cells added to the candidates
+
+
+def _new_threats(board, pair, player):
+    """How many windows become threats for `player` (4 or more of his stones,
+    none of the opponent's) when he places the two stones of `pair`.
+    Only the windows that pass through those two cells can change."""
+    grid = board.grid
+    other = opponent(player)
+    windows = set(CELL_WINDOWS[pair[0]]) | set(CELL_WINDOWS[pair[1]])
+    count = 0
+    for window in windows:
+        before = after = 0
+        clean = True
+        for cell in window:
+            x, y = cell
+            value = grid[y][x]
+            if value == other:
+                clean = False
+                break
+            if value == player:
+                before += 1
+                after += 1
+            elif cell in pair:
+                after += 1
+        if clean and before < 4 <= after:
+            count += 1
+    return count
+
+
+def staged_moves(board, max_cells=MAX_CELLS):
+    """Candidate moves of version 3 (same output format as threat_moves)."""
+    if board.stones_played == 0:
+        return [[CENTRE]]
+    player = board.to_move
+    n_stones = board.stones_this_turn()
+    mine, theirs, makers = _scan(board, player)
+    cells = threat_cells(board, max_cells)
+
+    # Stage 1: win now.
+    for empty in mine:
+        if len(empty) <= n_stones:
+            move = list(empty)
+            if len(move) < n_stones:            # one stone is enough to win:
+                for cell in cells:              # add the best other cell
+                    if cell not in move:
+                        move.append(cell)
+                        break
+            return [move]
+
+    # Stage 2: block every threat of the opponent.
+    if theirs:
+        blocking = sorted({cell for empty in theirs for cell in empty})
+        pool = blocking + [c for c in cells if c not in blocking]
+        defences = []
+        for a, b in combinations(pool, 2):
+            if a not in blocking and b not in blocking:
+                continue
+            if all(a in empty or b in empty for empty in theirs):
+                defences.append([a, b])
+        if defences:
+            defences.sort(key=lambda m: -(threat_score(board, *m[0], player)
+                                          + threat_score(board, *m[1], player)))
+            return defences[:max_cells * (max_cells - 1) // 2]
+        # No pair blocks everything: the game is lost; play normally.
+
+    # Stage 3: normal moves. The cells that create a threat with one stone
+    # are always candidates (the best MAX_MAKERS of them), even if their
+    # threat score leaves them out of the best cells; then the pairs that
+    # create the most threat windows go first.
+    extra = sorted((c for c in makers if c not in cells),
+                   key=lambda c: -threat_score(board, *c, player))
+    cells = cells + extra[:MAX_MAKERS]
+    if n_stones == 1 or len(cells) < 2:
+        return [[c] for c in cells] or threat_moves(board, max_cells)
+    pairs = [list(p) for p in combinations(cells, 2)]
+    scored = [(-_new_threats(board, m, player), i, m)
+              for i, m in enumerate(pairs)]
+    scored.sort()
+    return [m for _, _, m in scored]

@@ -4,6 +4,7 @@ Move search for Connect6.
 Version 1: Minimax with a fixed depth.
 Version 2: Alpha-Beta pruning (same decisions as Minimax, fewer nodes),
            protected by a time limit (see TIME_LIMIT).
+Version 3: same search; new move generator and evaluation (threats).
 
   - Black is MAX: it wants the evaluation as high as possible.
   - White is MIN: it wants the evaluation as low as possible.
@@ -24,11 +25,13 @@ import evaluation
 
 DEPTH = 3          # turns looked ahead (version 1 used 2; Alpha-Beta allows 3)
 
-# Settings (version 2 by default). For version 1 use:
-#   GENERATOR = moves.candidate_moves, EVALUATE = evaluation.evaluate,
-#   ALGORITHM = "minimax"
-GENERATOR = moves.threat_moves           # candidate moves
-EVALUATE = evaluation.evaluate_weighted  # static evaluation
+# Settings (version 3 by default). Previous versions:
+#   version 1: GENERATOR = moves.candidate_moves, EVALUATE = evaluation.evaluate,
+#              ALGORITHM = "minimax", DEPTH = 2
+#   version 2: GENERATOR = moves.threat_moves,
+#              EVALUATE = evaluation.evaluate_weighted
+GENERATOR = moves.staged_moves           # candidate moves
+EVALUATE = evaluation.evaluate_threats   # static evaluation
 ALGORITHM = "alphabeta"                  # "minimax" or "alphabeta"
 
 # Time protection. The GUI waits at most 30 seconds for a move, and a late

@@ -10,6 +10,7 @@ If something is wrong it stops and shows which test failed and why.
 
 from board import Board, BLACK, WHITE
 from evaluation import evaluate, living_lines, WINDOWS, WIN_SCORE
+from evaluation import count_threats, evaluate_threats, NEAR_WIN, LINES
 
 
 def check(name, got, expected):
@@ -78,5 +79,53 @@ for y in range(19):
         b.grid[y][x] = BLACK if ((x + 2 * y) // 2) % 2 == 0 else WHITE
 b.stones_played = 19 * 19
 check("full board, nobody wins (draw)", evaluate(b, [(18, 18)]), 0)
+
+# ---------------------------------------------------------------------------
+# Version 3: threats (Wu and Huang's definition) and the new evaluation
+# ---------------------------------------------------------------------------
+
+def stones(black, white, to_move):
+    """Board with these stones and this player to move."""
+    b = Board()
+    for x, y in black:
+        b.grid[y][x] = BLACK
+    for x, y in white:
+        b.grid[y][x] = WHITE
+    b.stones_played = len(black) + len(white)
+    b.to_move = to_move
+    return b
+
+ROW_FOUR = [(6, 9), (7, 9), (8, 9), (9, 9)]          # GJ..JJ
+
+# 9. The lines of the board cover the 924 windows exactly once.
+check("lines cover all windows", sum(len(l) - 5 for l in LINES), 924)
+
+# 10. Open four: White needs 2 stones to stop it -> 2 threats.
+check("open four = 2 threats", count_threats(stones(ROW_FOUR, [], WHITE), BLACK), 2)
+
+# 11. Four blocked at one end: 1 stone is enough -> 1 threat.
+check("blocked four = 1 threat",
+      count_threats(stones(ROW_FOUR, [(5, 9)], WHITE), BLACK), 1)
+
+# 12. X X . X X: one stone in the gap blocks it -> 1 threat.
+check("XX.XX = 1 threat",
+      count_threats(stones([(6, 9), (7, 9), (9, 9), (10, 9)], [], WHITE), BLACK), 1)
+
+# 13. Three in a row is not a threat yet.
+check("three = 0 threats", count_threats(stones(ROW_FOUR[:3], [], WHITE), BLACK), 0)
+
+# 14. The player to move has a threat: he wins now -> near win.
+check("Black to move with a four", evaluate_threats(stones(ROW_FOUR, [], BLACK)), NEAR_WIN)
+
+# 15. The player who has just moved has 2 open fours (4 threats):
+#     the opponent cannot block them all -> near win for him.
+two_fours = ROW_FOUR + [(14, 3), (14, 4), (14, 5), (14, 6)]
+check("Black with 4 threats, White to move",
+      evaluate_threats(stones(two_fours, [], WHITE)), NEAR_WIN)
+
+# 16. Only 2 threats with the opponent to move: he can block them,
+#     so it is not a near win, just a good position.
+value = evaluate_threats(stones(ROW_FOUR, [], WHITE))
+check("open four, White to move, is not a near win", 0 < value < NEAR_WIN, True)
 
 print("\nAll tests passed.")
