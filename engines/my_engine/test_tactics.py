@@ -5,6 +5,9 @@ Run from the engine folder with:
     python test_tactics.py          (the current version, set in search.py)
     python test_tactics.py v2       (any version defined in match.py)
 
+Versions 1 to 4 are tested at their fixed depth; version 5 with its time
+limit, searching as deep as the time allows.
+
 Unlike test_evaluation.py, these tests do not check a number: they give the
 engine a position and check whether the MOVE it chooses is the right one.
 They are the test positions of the practice (forced wins and defences in
@@ -38,7 +41,9 @@ from moves import neighbours
 if len(sys.argv) > 1:
     from match import use
     use(sys.argv[1])
-search.TIME_LIMIT = None   # fixed depth: exact node counts for the report
+if search.ALGORITHM != "optimised":
+    search.TIME_LIMIT = None   # fixed depth: exact node counts for the report
+# Version 5 keeps its time limit: it searches as deep as the time allows.
 
 
 def show(name, ok, detail):
@@ -63,7 +68,8 @@ def think(b):
     t = time.perf_counter()
     move = search.best_move(b, BLACK)
     elapsed = time.perf_counter() - t
-    return move, f"played {move}, {elapsed:.2f} s, {search.nodes} nodes"
+    return move, (f"played {move}, {elapsed:.2f} s, {search.nodes} nodes, "
+                  f"depth {search.depth_reached}")
 
 
 # ---------------------------------------------------------------------------

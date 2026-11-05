@@ -11,6 +11,7 @@ If something is wrong it stops and shows which test failed and why.
 from board import Board, BLACK, WHITE
 from evaluation import evaluate, living_lines, WINDOWS, WIN_SCORE
 from evaluation import count_threats, evaluate_threats, NEAR_WIN, LINES
+from evaluation import features, features_v4
 
 
 def check(name, got, expected):
@@ -127,5 +128,31 @@ check("Black with 4 threats, White to move",
 #     so it is not a near win, just a good position.
 value = evaluate_threats(stones(ROW_FOUR, [], WHITE))
 check("open four, White to move, is not a near win", 0 < value < NEAR_WIN, True)
+
+# --- Version 4: live and dead threes -------------------------------------
+# features_v4() gives, for each player, [lines1, lines2, lines3, threats,
+# live3, dead3]. LIVE3 and DEAD3 are positions 4 and 5.
+
+# 17. . . X X X . . in the middle of a row: one more stone makes an open
+#     four (2 threats) -> live three.
+three = ROW_FOUR[:3]
+check("open three is live", features_v4(stones(three, [], WHITE))[0][4:], [1, 0])
+
+# 18. O X X X . . . : blocked on one side, one more stone makes only one
+#     threat -> dead three.
+check("blocked three is dead",
+      features_v4(stones(three, [(5, 9)], WHITE))[0][4:], [0, 1])
+
+# 19. X . X . X: one more stone gives only one threat -> dead three.
+check("X.X.X is dead",
+      features_v4(stones([(6, 9), (8, 9), (10, 9)], [], WHITE))[0][4:], [0, 1])
+
+# 20. The other features are the same as in version 3.
+b = stones(two_fours + [(3, 3)], [(10, 9), (14, 7), (4, 4)], WHITE)
+f3 = features(b)
+black, white = features_v4(b)
+check("same threats as version 3", (black[3], white[3]), f3["threats"])
+check("same living lines as version 3", (black[:3], white[:3]),
+      (f3["lines"][0][1:], f3["lines"][1][1:]))
 
 print("\nAll tests passed.")

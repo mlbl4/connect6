@@ -13,7 +13,7 @@ Anything that is not an answer for the GUI must go to stderr (see debug()).
 import sys
 
 from board import Board, EDGE, EMPTY, BLACK, WHITE
-from search import best_move, random_move
+from search import best_move, random_move, set_time_limit
 
 ENGINE_NAME = "mlb"
 
@@ -147,9 +147,10 @@ class API:
 
             elif cmd == "depth" and args:
                 # Originally the search depth; in this practice, the time
-                # limit per turn. Stored now, used once the search exists.
+                # limit per turn (in seconds), passed on to the search.
                 try:
-                    self.time_limit = int(args[0])
+                    self.time_limit = float(args[0])
+                    set_time_limit(self.time_limit)
                 except ValueError:
                     pass
 
@@ -166,4 +167,4 @@ class API:
 
 
 if __name__ == "__main__":
-    API().run()
+    API().run()

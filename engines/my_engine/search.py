@@ -5,6 +5,11 @@ Version 1: Minimax with a fixed depth.
 Version 2: Alpha-Beta pruning (same decisions as Minimax, fewer nodes),
            protected by a time limit (see TIME_LIMIT).
 Version 3: same search; new move generator and evaluation (threats).
+Version 4: same search; evaluation with weights learned by a genetic algorithm.
+Version 5: Alpha-Beta with the optimisations of session 4 (see the end of
+           the file): transposition table, quiescence search, N-best forward
+           pruning, move ordering from the previous iteration, and a time
+           limit taken from the GUI.
 
   - Black is MAX: it wants the evaluation as high as possible.
   - White is MIN: it wants the evaluation as low as possible.
@@ -23,16 +28,21 @@ from board import BLACK
 import moves
 import evaluation
 
-DEPTH = 3          # turns looked ahead (version 1 used 2; Alpha-Beta allows 3)
+DEPTH = 6          # maximum turns looked ahead (version 1: 2; versions 2-4: 3;
+                   # version 5 goes as deep as the time limit allows)
 
 # Settings (version 3 by default). Previous versions:
 #   version 1: GENERATOR = moves.candidate_moves, EVALUATE = evaluation.evaluate,
 #              ALGORITHM = "minimax", DEPTH = 2
 #   version 2: GENERATOR = moves.threat_moves,
 #              EVALUATE = evaluation.evaluate_weighted
+#   version 3: EVALUATE = evaluation.evaluate_threats, ALGORITHM = "alphabeta",
+#              DEPTH = 3
+#   version 4: EVALUATE = evaluation.evaluate_learned, ALGORITHM = "alphabeta",
+#              DEPTH = 3
 GENERATOR = moves.staged_moves           # candidate moves
-EVALUATE = evaluation.evaluate_threats   # static evaluation
-ALGORITHM = "alphabeta"                  # "minimax" or "alphabeta"
+EVALUATE = evaluation.evaluate_learned   # static evaluation
+ALGORITHM = "optimised"                  # "minimax", "alphabeta" or "optimised"
 
 # Time protection. The GUI waits at most 30 seconds for a move, and a late
 # move means the engine is not evaluated. With TIME_LIMIT set, best_move()
@@ -42,6 +52,8 @@ ALGORITHM = "alphabeta"                  # "minimax" or "alphabeta"
 # None = plain fixed-depth search (used by the measurement scripts, so their
 # node counts are those of a single depth).
 TIME_LIMIT = 20.0  # seconds: 10 s of margin below the 30 s of the GUI
+                   # (version 5: replaced by the time sent by the GUI, see
+                   # set_time_limit())
 
 # Counters for the experiments, reset at the start of every best_move():
 #   nodes:  positions explored (expanded nodes)
@@ -185,6 +197,11 @@ def _search_root(board, color, candidates, depth):
         try:
             if ALGORITHM == "minimax":
                 value = minimax(board, depth - 1, move)
+            elif ALGORITHM == "optimised":
+                value = optimised(board, depth - 1, move,
+                                  *((best_value, float("inf")) if maximising
+                                    else (float("-inf"), best_value)),
+                                  _child_key(_root_key, move, color))
             elif maximising:
                 value = alphabeta(board, depth - 1, move, best_value, float("inf"))
             else:
@@ -199,8 +216,10 @@ def _search_root(board, color, candidates, depth):
 
 def best_move(board, color):
     """Return the move (list of stones) chosen for `color`."""
-    global nodes, pruned, depth_reached, _deadline
+    global nodes, pruned, depth_reached, _deadline, _root_key
     nodes = pruned = 0
+    _table.clear()
+    _root_key = _key_of(board)
 
     candidates = GENERATOR(board)
     if len(candidates) == 1:           # e.g. the opening: nothing to compare
@@ -213,15 +232,195 @@ def best_move(board, color):
         return _search_root(board, color, candidates, DEPTH)
 
     # Iterative deepening under a time limit.
-    _deadline = time.perf_counter() + TIME_LIMIT
+    start = time.perf_counter()
+    _deadline = start + TIME_LIMIT
     chosen = candidates[0]             # safety net: always a legal move
     depth_reached = 0
     try:
         for depth in range(1, DEPTH + 1):
             chosen = _search_root(board, color, candidates, depth)
             depth_reached = depth
+            if ALGORITHM == "optimised":
+                # Move ordering: the best move of this depth is searched
+                # first at the next depth, so Alpha-Beta prunes more.
+                candidates = [chosen] + [m for m in candidates if m != chosen]
+                # Each depth costs several times the previous one: if half
+                # of the time is gone, the next depth cannot finish.
+                if time.perf_counter() - start > TIME_LIMIT / 2:
+                    break
     except _OutOfTime:
         pass                           # keep the move of the last full depth
     finally:
         _deadline = None
     return chosen
+
+
+# ---------------------------------------------------------------------------
+# Version 5: optimised Alpha-Beta (session 4)
+# ---------------------------------------------------------------------------
+#
+# The optimisations proposed in the guide of session 4 and in Unit 3:
+#
+#  - Transposition table: the same position can be reached by different
+#    orders of moves (A then B, or B then A). Its value is stored the first
+#    time it is searched and reused afterwards. Each position is identified
+#    by a Zobrist key: a random 64-bit number per (colour, cell), combined
+#    with XOR, which can be updated in two operations per stone when a move
+#    is played or undone. The table also stores the best move found in each
+#    position, which is searched first the next time (move ordering).
+#
+#  - Quiescence search (horizon effect): when the depth runs out just after
+#    a player has created a threat, the static evaluation of that position is
+#    not reliable: the opponent is forced to block, and the result of that
+#    block is unknown. Instead of stopping there, the search goes on with
+#    only the forced moves (the blocks) until the position is quiet, up to
+#    QUIESCENCE_DEPTH more turns.
+#
+#  - Forward pruning (N-best): inside the tree only the N_BEST first candidate
+#    moves of the generator are searched (they are already ordered from best
+#    to worst). The root still considers all of them.
+#
+#  - Iterative deepening and move ordering: the best move of each depth is
+#    searched first at the next depth (see best_move()).
+#
+#  - Real-time response: the time limit comes from the GUI (set_time_limit()).
+
+N_BEST = 20              # candidate moves searched at each inner node
+QUIESCENCE_DEPTH = 0     # extra turns of forced moves at the leaves.
+# Measured: with 1 extra turn the search reaches depth 3 in 20 s; without
+# it, depth 4 or 5. The deeper plain search is preferred (set to 1 or 2 to
+# use the quiescence search).
+
+_rng = random.Random(6)
+_ZOBRIST = {(color, x, y): _rng.getrandbits(64)
+            for color in (1, 2) for x in range(19) for y in range(19)}
+_table = {}              # Zobrist key -> (depth, value, flag, best move)
+_root_key = 0
+EXACT, LOWER, UPPER = 0, 1, 2
+
+
+def _key_of(board):
+    """Zobrist key of a board: XOR of the numbers of all its stones."""
+    key = 0
+    for y, row in enumerate(board.grid):
+        for x, cell in enumerate(row):
+            if cell in (1, 2):
+                key ^= _ZOBRIST[(cell, x, y)]
+    return key
+
+
+def _child_key(key, move, color):
+    """Key after `color` places the stones of `move` (XOR adds a stone)."""
+    for x, y in move:
+        key ^= _ZOBRIST[(color, x, y)]
+    return key
+
+
+def set_time_limit(seconds):
+    """Time limit per turn sent by the GUI with the 'depth' command. 80% of
+    it is used, never more than the 20 s safety limit, so that the answer
+    always arrives in time even on a slower computer."""
+    global TIME_LIMIT
+    TIME_LIMIT = max(0.5, min(20.0, 0.8 * seconds))
+
+
+def quiescence(board, depth, alpha, beta, key):
+    """Value of a leaf, looking further only while the position is forced:
+    the player to move must block a threat of the opponent."""
+    global nodes
+    nodes += 1
+    _check_time()
+    value = EVALUATE(board)
+    if depth == 0 or abs(value) >= evaluation.NEAR_WIN:
+        return value
+    player = board.to_move
+    _, theirs, _ = moves._scan(board, player)
+    if not theirs:                     # quiet: the evaluation is reliable
+        return value
+    color = player
+    maximising = (color == BLACK)
+    best = float("-inf") if maximising else float("inf")
+    for move in GENERATOR(board)[:N_BEST]:   # only the blocks
+        board.place(color, move)
+        try:
+            v = quiescence(board, depth - 1, alpha, beta,
+                           _child_key(key, move, color))
+        finally:
+            board.undo(move)
+        if maximising:
+            best = max(best, v)
+            alpha = max(alpha, v)
+        else:
+            best = min(best, v)
+            beta = min(beta, v)
+        if alpha >= beta:
+            break
+    return best
+
+
+def optimised(board, depth, last_move, alpha, beta, key):
+    """Alpha-Beta (same structure as alphabeta()) with transposition table,
+    quiescence search at the leaves and N-best forward pruning."""
+    global nodes, pruned
+    if board.check_winner(last_move) is not None:
+        nodes += 1
+        return EVALUATE(board, last_move)
+    if depth == 0:
+        return quiescence(board, QUIESCENCE_DEPTH, alpha, beta, key)
+    nodes += 1
+    _check_time()
+
+    # Transposition table: reuse a previous search of this position.
+    alpha0, beta0 = alpha, beta
+    entry = _table.get(key)
+    first = None
+    if entry is not None:
+        stored_depth, stored_value, flag, first = entry
+        if stored_depth >= depth:
+            if flag == EXACT:
+                return stored_value
+            if flag == LOWER:
+                alpha = max(alpha, stored_value)
+            else:
+                beta = min(beta, stored_value)
+            if alpha >= beta:
+                return stored_value
+
+    candidates = GENERATOR(board)[:N_BEST]
+    if not candidates:
+        return EVALUATE(board)
+    if first in candidates:            # best move of a previous search first
+        candidates.remove(first)
+        candidates.insert(0, first)
+
+    color = board.to_move
+    maximising = (color == BLACK)
+    value = float("-inf") if maximising else float("inf")
+    best_move_here = candidates[0]
+    for i, move in enumerate(candidates):
+        board.place(color, move)
+        try:
+            v = optimised(board, depth - 1, move, alpha, beta,
+                          _child_key(key, move, color))
+        finally:
+            board.undo(move)
+        if (maximising and v > value) or (not maximising and v < value):
+            value, best_move_here = v, move
+        if maximising:
+            alpha = max(alpha, value)
+        else:
+            beta = min(beta, value)
+        if alpha >= beta:
+            pruned += len(candidates) - i - 1
+            break
+
+    # Store the result. If the search was cut by alpha or beta, the value is
+    # only a bound of the real value.
+    if value <= alpha0:
+        flag = UPPER
+    elif value >= beta0:
+        flag = LOWER
+    else:
+        flag = EXACT
+    _table[key] = (depth, value, flag, best_move_here)
+    return value

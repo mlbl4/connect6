@@ -10,11 +10,15 @@ from board import Board, BLACK, WHITE, DRAW
 
 VERSIONS = {
     "v1": dict(GENERATOR=moves.candidate_moves, EVALUATE=evaluation.evaluate,
-               ALGORITHM="minimax", DEPTH=2),
+               ALGORITHM="minimax", DEPTH=2, TIME_LIMIT=20.0),
     "v2": dict(GENERATOR=moves.threat_moves, EVALUATE=evaluation.evaluate_weighted,
-               ALGORITHM="alphabeta", DEPTH=3),
+               ALGORITHM="alphabeta", DEPTH=3, TIME_LIMIT=20.0),
     "v3": dict(GENERATOR=moves.staged_moves, EVALUATE=evaluation.evaluate_threats,
-               ALGORITHM="alphabeta", DEPTH=3),
+               ALGORITHM="alphabeta", DEPTH=3, TIME_LIMIT=20.0),
+    "v4": dict(GENERATOR=moves.staged_moves, EVALUATE=evaluation.evaluate_learned,
+               ALGORITHM="alphabeta", DEPTH=3, TIME_LIMIT=20.0),
+    "v5": dict(GENERATOR=moves.staged_moves, EVALUATE=evaluation.evaluate_learned,
+               ALGORITHM="optimised", DEPTH=6, TIME_LIMIT=20.0),
 }
 
 def use(version):
@@ -38,7 +42,7 @@ def play(black, white, max_turns=120):
     return None, max_turns, slowest
 
 if __name__ == "__main__":
-    for black, white in (("v3", "v2"), ("v2", "v3")):
+    for black, white in (("v5", "v4"), ("v4", "v5")):
         result, turns, slowest = play(black, white)
         winner = {BLACK: f"Black ({black})", WHITE: f"White ({white})",
                   DRAW: "nobody (draw)", None: "nobody (move limit)"}[result]

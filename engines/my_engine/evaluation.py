@@ -267,3 +267,156 @@ def evaluate_threats(board, last_stones=None):
     for k in (1, 2, 3):
         score += W_LINES[k] * (lines_b[k] - lines_w[k])
     return score
+
+
+# ===========================================================================
+# Evaluation with learned weights (version 4, session 4)
+# ===========================================================================
+#
+# Version 3 does not see the difference between a three that can become two
+# threats with a single stone and one that can only become one. Wu and Huang
+# call them LIVE and DEAD threes:
+#   - live three: one more stone on the line gives two threats
+#     (e.g. ..XXX.. -> ..XXXX.., an open four that needs two stones to block);
+#   - dead three: one more stone gives only one threat
+#     (e.g. OXXX... -> OXXXX.., blocked on one side).
+# A live three is much more dangerous: with his next move (two stones) the
+# player can turn it into two threats and use the second stone elsewhere.
+#
+# The evaluation is a linear combination of six features (Black minus White):
+#   f1, f2, f3: living windows with 1, 2 and 3 stones (as in version 3)
+#   f4:         threats
+#   f5, f6:     live threes and dead threes (one per line, the best one)
+# and its weights are learned with a genetic algorithm (genetic.py).
+# The rules that recognise a certain win (near win) are not learned: they are
+# exact consequences of the rules of the game.
+
+FEATURE_NAMES = ["lines1", "lines2", "lines3", "threats", "live3", "dead3"]
+
+# Weights chosen by hand before the learning (version 3 + an estimate for the
+# new features): the starting point of the genetic algorithm.
+HAND_WEIGHTS = [1, 5, 25, 500, 150, 40]
+
+# Weights found by the genetic algorithm (genetic.py), used by the engine:
+# the best individual of the validation (generation 6 of 15, 0.60 of the
+# points against HAND_WEIGHTS on 20 new openings, see genetic_validation.csv).
+LEARNED_WEIGHTS = [1.3, 8.9, 42.6, 685.0, 453.6, 44.4]
+
+# Weights used by evaluate_learned(). genetic.py changes them to make the
+# individuals of the population play against each other.
+WEIGHTS_V4 = LEARNED_WEIGHTS
+
+# Each line as a list of cells, so its stones can be read in one go.
+_LINE_CELLS = LINES
+
+
+def _line_threats(values, player):
+    """Threats of `player` on one line (Wu and Huang's sliding window).
+    `values` are the contents of the cells of the line, in order."""
+    threats = 0
+    marked = -1          # last marked position (marks are always to the right)
+    n = len(values)
+    for i in range(n - WIN_LENGTH + 1):
+        own = 0
+        clean = True
+        last_empty = -1
+        first_empty = -1
+        for j in range(i, i + WIN_LENGTH):
+            v = values[j]
+            if v == player:
+                own += 1
+            elif v == EMPTY:
+                if first_empty < 0:
+                    first_empty = j
+                last_empty = j
+            else:
+                clean = False
+                break
+        if clean and own >= 4 and first_empty > marked:
+            threats += 1
+            marked = last_empty
+    return threats
+
+
+def _line_features(values, player, other):
+    """Features of `player` on one line:
+    (windows with 1, 2, 3 stones, threats, live three, dead three)."""
+    counts = [0, 0, 0, 0]
+    three_cells = set()
+    n = len(values)
+    for i in range(n - WIN_LENGTH + 1):
+        own = 0
+        empty = []
+        for j in range(i, i + WIN_LENGTH):
+            v = values[j]
+            if v == player:
+                own += 1
+            elif v == other:
+                own = -1
+                break
+            else:
+                empty.append(j)
+        if 1 <= own <= 3:
+            counts[own] += 1
+            if own == 3:
+                three_cells.update(empty)
+    threats = _line_threats(values, player)
+    live = dead = 0
+    if three_cells and threats == 0:
+        # Try one more stone on each cell that could extend the three and
+        # count the threats it would create on this line.
+        best = 0
+        for j in three_cells:
+            values[j] = player
+            best = max(best, _line_threats(values, player))
+            values[j] = EMPTY
+            if best >= 2:
+                break
+        if best >= 2:
+            live = 1
+        elif best == 1:
+            dead = 1
+    return counts[1], counts[2], counts[3], threats, live, dead
+
+
+def features_v4(board):
+    """The six features of each player: two lists (Black, White)."""
+    grid = board.grid
+    black = [0] * 6
+    white = [0] * 6
+    for line in _LINE_CELLS:
+        values = [grid[y][x] for x, y in line]
+        if BLACK in values:
+            for k, v in enumerate(_line_features(values, BLACK, WHITE)):
+                black[k] += v
+        if WHITE in values:
+            for k, v in enumerate(_line_features(values, WHITE, BLACK)):
+                white[k] += v
+    return black, white
+
+
+def evaluate_learned(board, last_stones=None):
+    """Version 4 evaluation, from Black's point of view.
+    Same certain-win rules as version 3; otherwise the linear combination
+    sum_i w_i * (f_i(Black) - f_i(White)) with the weights WEIGHTS_V4."""
+    if last_stones:
+        result = board.check_winner(last_stones)
+        if result == BLACK:
+            return WIN_SCORE
+        if result == WHITE:
+            return -WIN_SCORE
+        if result == DRAW:
+            return 0
+
+    black, white = features_v4(board)
+    mover = board.to_move
+    sign = 1 if mover == BLACK else -1
+    tb, tw = black[3], white[3]
+    mover_threats, waiting_threats = (tb, tw) if mover == BLACK else (tw, tb)
+    if mover_threats >= 1:
+        return sign * NEAR_WIN
+    if waiting_threats >= 3:
+        return -sign * NEAR_WIN
+
+    w = WEIGHTS_V4
+    return sum(w[k] * (black[k] - white[k]) for k in range(6))
