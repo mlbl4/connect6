@@ -13,6 +13,7 @@ Anything that is not an answer for the GUI must go to stderr (see debug()).
 import sys
 
 from board import Board, EDGE, EMPTY, BLACK, WHITE
+import search
 from search import best_move, random_move, set_time_limit
 
 ENGINE_NAME = "mlb"
@@ -89,6 +90,8 @@ class API:
         if the search ever returned one, a random legal move is sent instead."""
         color = self.board.to_move
         stones = best_move(self.board, color)
+        # Search statistics for the experiments (stderr: ignored by the GUI).
+        debug(f"stats depth {search.depth_reached} nodes {search.nodes}")
         if not self.is_legal(stones):
             debug("Illegal move from the search: " + str(stones))
             stones = random_move(self.board, color)

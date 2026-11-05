@@ -4,14 +4,16 @@ Run from the engine folder with:
 
     python test_tactics.py          (the current version, set in search.py)
     python test_tactics.py v2       (any version defined in match.py)
+    python test_tactics.py v5 4     (version 5 with the time of level 4)
 
-Versions 1 to 4 are tested at their fixed depth; version 5 with its time
-limit, searching as deep as the time allows.
+Versions 1 to 4 are tested at their fixed depth. Version 5 gets the time
+limit that the GUI would send (level 6 = High = 6 seconds by default, or the
+level given), and searches as deep as that time allows.
 
 Unlike test_evaluation.py, these tests do not check a number: they give the
 engine a position and check whether the MOVE it chooses is the right one.
 They are the test positions of the practice (forced wins and defences in
-1 and 2 turns), also used in the Experimentation section.
+1, 2 and 3 turns), also used in the Experimentation section.
 
   1. Forced win in 1 turn: Black has five in a row and completes six.
   2. Defence against a threat in 1 turn: White has an open four
@@ -24,6 +26,17 @@ They are the test positions of the practice (forced wins and defences in
      colours swapped. If Black does nothing, White makes 4 threats and
      wins. Passed if, after Black's move, no reply of White gives it
      3 or more threats.
+  5. Forced win in 3 turns: Black has an open three and two pairs that
+     cross at one empty cell. No single move gives 3 threats (checked by
+     the test), so Black cannot win in 2 turns. The winning sequence is:
+     turn 1, an open four (White must spend both stones blocking it) plus
+     the crossing stone, which makes two new open threes; turn 2, both
+     threes become open fours (4 threats); turn 3, six. The game is played
+     out against a fixed opponent (version 4, depth 3); passed if Black
+     makes six within its 3 turns.
+  6. Defence against a threat in 3 turns: the same position with the
+     colours swapped. Passed if White (the same fixed opponent) has not
+     made six after its 3 turns.
 
 With version 1 (naive generator) tests 1 and 2 fail: the cells at the ends
 of a line have few neighbouring stones, so they are never candidates.
@@ -34,6 +47,7 @@ import time
 from itertools import combinations
 
 import search
+import match
 from board import Board, BLACK, WHITE, EMPTY
 from evaluation import count_threats
 from moves import neighbours
@@ -41,9 +55,13 @@ from moves import neighbours
 if len(sys.argv) > 1:
     from match import use
     use(sys.argv[1])
+LEVEL = int(sys.argv[2]) if len(sys.argv) > 2 else 6
 if search.ALGORITHM != "optimised":
     search.TIME_LIMIT = None   # fixed depth: exact node counts for the report
-# Version 5 keeps its time limit: it searches as deep as the time allows.
+else:
+    # Version 5 gets the time the GUI gives it: 'depth LEVEL' (High = 6 s),
+    # of which it uses 80%, and searches as deep as that time allows.
+    search.set_time_limit(LEVEL)
 
 
 def show(name, ok, detail):
@@ -69,7 +87,7 @@ def think(b):
     move = search.best_move(b, BLACK)
     elapsed = time.perf_counter() - t
     return move, (f"played {move}, {elapsed:.2f} s, {search.nodes} nodes, "
-                  f"depth {search.depth_reached}")
+                  f"{search.pruned} pruned, depth {search.depth_reached}")
 
 
 # ---------------------------------------------------------------------------
@@ -140,3 +158,62 @@ for reply in combinations(cells, 2):
     b.undo(list(reply))
 show("defence against a threat in 2 turns (White cannot reach 3 threats)",
      worst < 3, detail + f", White's best reply: {worst} threats")
+
+# ---------------------------------------------------------------------------
+# 5. Forced win in 3 turns: open three on row O (C, D, E), a pair on column M
+#    (rows C, D) and a pair on row E (columns K, L). The pairs cross at the
+#    empty cell ME (12, 4).
+# ---------------------------------------------------------------------------
+SHAPES = [(2, 14), (3, 14), (4, 14), (12, 2), (12, 3), (10, 4), (11, 4)]
+SETTINGS = ["GENERATOR", "EVALUATE", "ALGORITHM", "DEPTH", "TIME_LIMIT"]
+TESTED = {name: getattr(search, name) for name in SETTINGS}
+
+
+def opponent_move(b, color):
+    """Move of the fixed opponent: version 4 at depth 3 (no time limit)."""
+    match.use("v4")
+    search.TIME_LIMIT = None
+    move = search.best_move(b, color)
+    for name, value in TESTED.items():      # back to the tested version
+        setattr(search, name, value)
+    return move
+
+
+def play_out(b, turns):
+    """Black (tested version) and White (fixed opponent) play `turns` turns
+    each. Returns (winner or None, Black's first move, its detail text)."""
+    first = detail = None
+    for _ in range(2 * turns):
+        color = b.to_move
+        if color == BLACK:
+            move, text = think(b)
+            if first is None:
+                first, detail = move, text
+        else:
+            move = opponent_move(b, color)
+        b.place(color, move)
+        winner = b.check_winner(move)
+        if winner is not None:
+            return winner, first, detail
+    return None, first, detail
+
+
+b = position(SHAPES + [(16, 16)], FAR_8, BLACK)
+cells = [c for c in b.empty_cells() if neighbours(b, *c) > 0]
+best_one_move = 0
+for pair in combinations(cells, 2):
+    b.place(BLACK, list(pair))
+    best_one_move = max(best_one_move, count_threats(b, BLACK))
+    b.undo(list(pair))
+winner, first, detail = play_out(b, 3)
+show("forced win in 3 turns (Black makes six within 3 turns)",
+     winner == BLACK and best_one_move < 3,
+     detail + f", no move gives 3 threats (max {best_one_move})")
+
+# ---------------------------------------------------------------------------
+# 6. Defence against a threat in 3 turns: the same shapes, now White's.
+# ---------------------------------------------------------------------------
+b = position(FAR_8[:7] + [(16, 16), (16, 2)], SHAPES + FAR_8[7:], BLACK)
+winner, first, detail = play_out(b, 3)
+show("defence against a threat in 3 turns (White has not won after 3 turns)",
+     winner != WHITE, detail)
