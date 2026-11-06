@@ -1,31 +1,31 @@
 version,position,result,seconds,nodes,pruned,depth
-v1,forced win in 1 turn,FAIL,1.03,2070,0,2
-v1,defence against a threat in 1 turn,FAIL,1.04,2070,0,2
-v1,forced win in 2 turns,FAIL,1.03,2070,0,2
-v1,defence against a threat in 2 turns,FAIL,1.05,2070,0,2
-v1,forced win in 3 turns,FAIL,1.04,2070,0,2
-v1,defence against a threat in 3 turns,FAIL,1.05,2070,0,2
-v2,forced win in 1 turn,PASS,0.79,1333,1232,3
-v2,defence against a threat in 1 turn,PASS,1.35,2074,4901,3
-v2,forced win in 2 turns,PASS,1.58,2311,5744,3
-v2,defence against a threat in 2 turns,FAIL,5.77,8490,17205,3
-v2,forced win in 3 turns,PASS,1.86,2642,7933,3
-v2,defence against a threat in 3 turns,FAIL,2.59,3982,6458,3
+v1,forced win in 1 turn,FAIL,0.82,2070,0,2
+v1,defence against a threat in 1 turn,FAIL,0.75,2070,0,2
+v1,forced win in 2 turns,FAIL,0.75,2070,0,2
+v1,defence against a threat in 2 turns,FAIL,1.23,2070,0,2
+v1,forced win in 3 turns,FAIL,2.15,2070,0,2
+v1,defence against a threat in 3 turns,FAIL,2.32,2070,0,2
+v2,forced win in 1 turn,PASS,0.55,1333,1232,3
+v2,defence against a threat in 1 turn,PASS,0.96,2074,4901,3
+v2,forced win in 2 turns,PASS,1.10,2311,5744,3
+v2,defence against a threat in 2 turns,FAIL,13.09,8490,17205,3
+v2,forced win in 3 turns,PASS,4.60,2642,7933,3
+v2,defence against a threat in 3 turns,FAIL,6.26,3982,6458,3
 v3,forced win in 1 turn,PASS,0.00,0,0,0
-v3,defence against a threat in 1 turn,PASS,1.59,1448,3595,3
-v3,forced win in 2 turns,PASS,4.86,5298,1182,3
-v3,defence against a threat in 2 turns,PASS,10.93,6871,13430,3
-v3,forced win in 3 turns,PASS,4.02,4522,1350,3
-v3,defence against a threat in 3 turns,PASS,1.67,736,5843,3
+v3,defence against a threat in 1 turn,PASS,1.41,1448,3595,3
+v3,forced win in 2 turns,PASS,10.45,5298,1182,3
+v3,defence against a threat in 2 turns,PASS,29.28,6871,13430,3
+v3,forced win in 3 turns,PASS,11.58,4522,1350,3
+v3,defence against a threat in 3 turns,PASS,4.59,736,5843,3
 v4,forced win in 1 turn,PASS,0.00,0,0,0
-v4,defence against a threat in 1 turn,PASS,1.69,1631,3412,3
-v4,forced win in 2 turns,PASS,5.25,5298,1182,3
-v4,defence against a threat in 2 turns,PASS,12.13,7109,14407,3
-v4,forced win in 3 turns,PASS,4.59,4522,1350,3
-v4,defence against a threat in 3 turns,PASS,1.99,953,5856,3
+v4,defence against a threat in 1 turn,PASS,1.29,1631,3412,3
+v4,forced win in 2 turns,PASS,9.86,5298,1182,3
+v4,defence against a threat in 2 turns,PASS,31.00,7109,14407,3
+v4,forced win in 3 turns,PASS,11.53,4522,1350,3
+v4,defence against a threat in 3 turns,PASS,5.13,953,5856,3
 v5,forced win in 1 turn,PASS,0.00,0,0,0
-v5,defence against a threat in 1 turn,PASS,4.81,2328,9798,4
-v5,forced win in 2 turns,PASS,2.81,1952,1364,3
-v5,defence against a threat in 2 turns,PASS,3.60,1892,2092,3
-v5,forced win in 3 turns,PASS,2.44,1709,1817,3
-v5,defence against a threat in 3 turns,PASS,4.81,2836,4667,3
+v5,defence against a threat in 1 turn,PASS,4.81,2161,8378,4
+v5,forced win in 2 turns,PASS,4.82,1222,1093,2
+v5,defence against a threat in 2 turns,PASS,4.82,1002,1481,2
+v5,forced win in 3 turns,PASS,4.82,1216,1401,2
+v5,defence against a threat in 3 turns,PASS,3.57,615,2029,3
