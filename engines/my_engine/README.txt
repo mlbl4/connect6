@@ -22,6 +22,11 @@ with "Load Black Engine" or "Load White Engine".
 Without building it, the engine can also be run directly with:
     python3 main.py
 
+TIME LIMIT
+----------
+The 'depth d' command sent by the GUI (Low = 4, Medium = 5, High = 6) is
+taken as the time limit per turn in seconds; the engine uses 80% of it.
+Without 'depth', it uses at most 20 seconds per move.
 
 FILES
 -----
