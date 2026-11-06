@@ -1,21 +1,21 @@
-opening adjacent (JIKI)  level 4  our colour Black  result loss  reason six stones  plies 18  our moves 8  avg time 2.83  max time 3.21  avg depth 4.0  avg nodes 1369
-    moves B:JJJJ W:JIKI B:IIHJ W:KJKK B:KHIH W:KLJK B:KMJH W:LKMK B:IKNK W:MJJM B:INNI W:MHML B:MINM W:IJLI B:ILNG W:LHLM B:NJJL W:MNHI
-opening adjacent (JIKI)  level 4  our colour White  result loss  reason six stones  plies 17  our moves 7  avg time 2.57  max time 3.21  avg depth 4.1  avg nodes 1349
-    moves B:JJJJ W:JIKI B:IIKK W:LLLJ B:HHJH W:FFLK B:HJKG W:GKLF B:LIIH W:KHIF B:HIHG W:HFHK B:KFJG W:FKLE B:IGIJ W:EKEF B:IKIL
-opening diagonal (IIKK)  level 4  our colour Black  result loss  reason six stones  plies 22  our moves 10  avg time 2.65  max time 3.21  avg depth 3.9  avg nodes 1376
-    moves B:JJJJ W:IIKK B:IKHJ W:JLHL B:IMIL W:IOLJ B:GJHM W:MIKI B:NHKJ W:IJLI B:JIJM W:LHLG B:LFLK W:IGJH B:HFMK W:KGJF B:IEOK W:KEJG B:GGMG W:KHHH B:IHFH W:GIFJ
-opening diagonal (IIKK)  level 4  our colour White  result loss  reason six stones  plies 17  our moves 7  avg time 2.64  max time 3.21  avg depth 4.1  avg nodes 1298
-    moves B:JJJJ W:IIKK B:IKKI W:HLHJ B:LHJH W:NFHK B:LJIG W:HFMK B:JGJI W:JFJK B:LKLI W:LFLL B:IFKH W:HEMJ B:HGIH W:HMHN B:MLKJ
-opening line (HJLJ)  level 4  our colour Black  result loss  reason six stones  plies 32  our moves 15  avg time 2.68  max time 3.21  avg depth 3.3  avg nodes 1296
-    moves B:JJJJ W:HJLJ B:IIKI W:KKMI B:IKHL W:FNLH B:JLIL W:NJOK B:KGPL W:LILK B:LFLL W:KLJK B:NKIJ W:INIH B:GLJH W:FLME B:JIHK W:FMKH B:FIJG W:HIJF B:JMGJ W:KNEH B:FKGK W:EKNH B:OGGG W:GIMH B:OHMG W:HNNG B:JNOF W:IGGM B:IMOE W:FJHH
-opening line (HJLJ)  level 4  our colour White  result loss  reason six stones  plies 23  our moves 10  avg time 2.66  max time 3.21  avg depth 4.2  avg nodes 1249
-    moves B:JJJJ W:HJLJ B:IKKK W:IILH B:LKJK W:GKMK B:JHJI W:JGJM B:KJML W:HGNM B:KLKI W:KGKM B:HMIL W:GNLI B:LMIJ W:HIMN B:NKKN W:IPOJ B:LGHL W:GMLL B:KHGL W:NJHF B:HKFM
-opening knight (LKHI)  level 4  our colour Black  result loss  reason six stones  plies 22  our moves 10  avg time 2.46  max time 3.21  avg depth 3.6  avg nodes 1428
-    moves B:JJJJ W:LKHI B:IIHJ W:JHIJ B:KKKL W:LJLL B:LHKI W:KJIK B:NFFF W:HHMG B:JIFG W:IHLI B:LMFH W:MHNG B:JKPE W:MJMI B:MEMK W:JGKH B:HENK W:KFOG B:FKFI W:LGKG
-opening knight (LKHI)  level 4  our colour White  result loss  reason six stones  plies 15  our moves 6  avg time 2.43  max time 3.21  avg depth 4.3  avg nodes 1189
-    moves B:JJJJ W:LKHI B:KIJH W:JKMK B:IKLH W:HLMG B:KHIH W:HHNH B:IJII W:IGIM B:HJKG W:GKLF B:GIKJ W:KEFJ B:KKKL
-opening far (MMGG)  level 4  our colour Black  result loss  reason six stones  plies 18  our moves 8  avg time 2.83  max time 3.21  avg depth 4.0  avg nodes 1450
-    moves B:JJJJ W:MMGG B:IJIK W:IHGJ B:HIGI W:JIFH B:HLJK W:GHHH B:EHKH W:HGGF B:FELK W:FIIF B:EJJE W:HFFF B:EFKF W:FGEG B:KIKK W:DGIG
-opening far (MMGG)  level 4  our colour White  result loss  reason six stones  plies 13  our moves 5  avg time 2.58  max time 3.21  avg depth 3.6  avg nodes 1337
-    moves B:JJJJ W:MMGG B:KIIK W:HLHG B:LHIG W:NFHF B:LJJH W:NLFH B:KJIJ W:HJNJ B:KHIH W:HHIE B:MHNH
-Games 10  wins 0  losses 10  draws 0  unfinished 0
+opening adjacent (JIKI)  level 5  our colour Black  result loss  reason six stones  plies 18  our moves 8  avg time 3.19  max time 4.00  avg depth 5.0  avg nodes 4440
+    moves B:JJJJ W:JIKI B:IIHJ W:KJKK B:KHIH W:KLLK B:KMJH W:JKMK B:IKNK W:MJJM B:INNI W:MHLI B:ILNG W:IJMI B:MFML W:LJLM B:JLKG W:LNLL
+opening adjacent (JIKI)  level 5  our colour White  result loss  reason six stones  plies 15  our moves 6  avg time 3.48  max time 4.00  avg depth 4.7  avg nodes 5157
+    moves B:JJJJ W:JIKI B:IIKK W:LLLJ B:HHJH W:FFLK B:HJGK W:FLKG B:IHGH W:FHKH B:HKHI W:HFHL B:GJFK W:KFLI B:IKJK
+opening diagonal (IIKK)  level 5  our colour Black  result loss  reason six stones  plies 26  our moves 12  avg time 3.26  max time 4.01  avg depth 3.8  avg nodes 4269
+    moves B:JJJJ W:IIKK B:IKHJ W:JLHL B:IMIL W:INKJ B:KMJM W:HMKN B:JNJO W:IOMM B:GJGI W:GHFI B:EJFJ W:IJDJ B:EKDL W:IGCM B:ELEM W:EHEN B:FHJP W:EGJQ B:FKFN W:IFHG B:IHJE W:HIFG B:CKGK W:JGGG
+opening diagonal (IIKK)  level 5  our colour White  result loss  reason six stones  plies 15  our moves 6  avg time 3.19  max time 4.00  avg depth 4.5  avg nodes 4791
+    moves B:JJJJ W:IIKK B:IKKI W:HLHJ B:JHLJ W:IGMG B:JIJG W:JFJL B:LINI W:MIHH B:MJKH W:HENK B:LGIJ W:KEHI B:HKGL
+opening line (HJLJ)  level 5  our colour Black  result win  reason six stones  plies 15  our moves 7  avg time 2.81  max time 4.00  avg depth 3.7  avg nodes 3646
+    moves B:JJJJ W:HJLJ B:IIKI W:IKGI B:KKLL W:NNHH B:KLKJ W:KNKH B:JLIL W:MLHL B:JKJI W:JHJM B:LIHM W:HIMH B:MINI
+opening line (HJLJ)  level 5  our colour White  result win  reason six stones  plies 30  our moves 14  avg time 3.15  max time 4.00  avg depth 4.6  avg nodes 3911
+    moves B:JJJJ W:HJLJ B:IKKK W:HLLL B:HKJK W:GKLK B:JHJI W:JGJL B:IJGL W:FMLG B:LHMG W:KIIM B:MHKH W:IHNH B:MIMF W:MEMK B:KGJF W:IENJ B:KLLM W:HINO B:KFLF W:HFNF B:KEJD W:ICKC B:LDMC W:HHNB B:HGNE W:JNKM B:KOIO W:EIFJ
+opening knight (LKHI)  level 5  our colour Black  result loss  reason six stones  plies 20  our moves 9  avg time 2.94  max time 4.00  avg depth 4.4  avg nodes 4042
+    moves B:JJJJ W:LKHI B:IIHJ W:KKKJ B:JHKG W:GKLF B:JKIH W:KLKM B:KIKN W:JMMJ B:INNI W:IMLM B:GMMM W:LJJL B:HNMI W:LLLI B:LHLN W:JNHL B:JFKH W:KOFJ
+opening knight (LKHI)  level 5  our colour White  result loss  reason six stones  plies 17  our moves 7  avg time 3.30  max time 4.00  avg depth 4.9  avg nodes 4750
+    moves B:JJJJ W:LKHI B:IKJL W:HJHL B:IMHK W:JKII B:IJIL W:IOGK B:JIKH W:GLMF B:GJJM W:FILO B:LJKK W:GOMI B:KJKI W:KGJH B:MJNJ
+opening far (MMGG)  level 5  our colour Black  result win  reason six stones  plies 15  our moves 7  avg time 2.32  max time 4.00  avg depth 3.4  avg nodes 3114
+    moves B:JJJJ W:MMGG B:IJIK W:IHGJ B:HIGI W:JIFH B:KILH W:HLMG B:JKKL W:GHLM B:KKLK W:HKMK B:KJMJ W:KMKH B:HJLJ
+opening far (MMGG)  level 5  our colour White  result loss  reason six stones  plies 19  our moves 8  avg time 2.93  max time 4.00  avg depth 5.4  avg nodes 3945
+    moves B:JJJJ W:MMGG B:KILH W:IKFH B:MGMI W:NFGI B:JILI W:IINI B:LJLG W:LFLK B:JHJK W:JFJL B:HJIG W:HFNL B:MFKH W:IJNE B:NJMH W:ILEI B:IHNH
+Games 10  wins 3  losses 7  draws 0  unfinished 0
